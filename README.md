@@ -1,0 +1,2 @@
+# 🥣 Overview of packet-modern-cpp-11-14-17
+- From [Complete Modern C++ (C++11/14/17) Specialization](https://www.coursera.org/specializations/packt-complete-modern-c-c-11-14-17) by Packet on Coursera [including 3 courses]

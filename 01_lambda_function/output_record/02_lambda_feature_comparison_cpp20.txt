@@ -1,0 +1,107 @@
+$ ./02_lambda_feature_comparison_cpp20
+
+Lambda Function Evolution: Feature-by-Feature Comparison
+========================================================
+
+=== C++11 vs C++14 Lambda Comparison ===
+
+--- C++11: What you CAN do ---
+  Basic captures work: 10
+  Explicit return types work: 3.14
+
+--- C++11: What you CANNOT do (will cause compile errors) ---
+  // ❌ C++11: Init capture - ILLEGAL
+  // auto lambda = [y = multiplier * 2](int x) { return x * y; }; // ERROR!
+  // ❌ C++11: Move capture - ILLEGAL
+  // auto lambda = [v = std::move(data)](int x) { return v[0] * x; }; // ERROR!
+  // ❌ C++11: Auto parameters - ILLEGAL
+  // auto lambda = [](auto x) { return x * 2; }; // ERROR!
+  // ❌ C++11: Complex auto return type - ILLEGAL
+  // auto lambda = [](bool flag) { if (flag) return 3.14; return 42; }; // ERROR!
+
+--- C++14: NEW features that are now LEGAL ---
+  Init capture: 20
+  Move capture: 3
+  Generic lambda (int): 10
+  Generic lambda (double): 6.28
+  Auto return: 3.14
+  Generic algorithm: 15
+
+
+=== C++14 vs C++17 Lambda Comparison ===
+
+--- C++14: What you can already do ---
+  Generic lambda: 25
+  Init capture: 45
+
+--- C++14: What you CANNOT do (will cause compile errors) ---
+  // ❌ C++14: Constexpr lambdas - ILLEGAL
+  // constexpr auto lambda = [](auto x) constexpr { return x * 2; }; // ERROR!
+  // ❌ C++14: Structured bindings with lambdas - ILLEGAL
+  // auto [min, max] = some_lambda_returning_pair(); // ERROR!
+
+--- C++17: NEW features that are now LEGAL ---
+  Constexpr lambda result: 25
+  Array size from constexpr: 16
+  Const array size from lambda: 9
+  Min/Max: 1/5
+  Constexpr in algorithm: 55
+
+
+=== C++17 vs C++20 Lambda Comparison ===
+
+--- C++17: What you can already do ---
+  Constexpr lambda: 10
+  Generic + init: 45
+
+--- C++17: What you CANNOT do (will cause compile errors) ---
+  // ❌ C++17: Template parameters on lambdas - ILLEGAL
+  // auto lambda = []<typename T>(T x) { return x * 2; }; // ERROR!
+  // ❌ C++17: Concepts with lambdas - ILLEGAL
+  // auto lambda = [](auto x) requires std::integral<decltype(x)> { ... }; // ERROR!
+  // ❌ C++17: Pack expansion in captures - ILLEGAL
+  // auto lambda = [...args = std::move(args)](){ ... }; // ERROR!
+
+--- C++20: NEW features that are now LEGAL ---
+  Template lambda (int): 25
+  Template lambda (double): 9.8596
+  Multi-template: 8.14
+  Concept constrained: 84
+  Integral concept: 11
+  Generic container op result size: 6
+  Variadic lambda tuple size: 3
+
+
+=== Lambda Evolution Summary ===
+
+C++11 - The Foundation:
+  ✅ Basic captures: [x], [&x], [=], [&]
+  ✅ Explicit return types: [](int x) -> int
+  ✅ Simple type-specific lambdas
+  ❌ No auto parameters
+  ❌ No init capture
+  ❌ No move capture
+  ❌ No auto return type deduction
+  ❌ No constexpr
+
+C++14 - Generic Power:
+  ✅ All C++11 features
+  ✅ NEW: Auto parameters: [](auto x)
+  ✅ NEW: Init capture: [y = expr]
+  ✅ NEW: Move capture: [v = std::move(x)]
+  ✅ NEW: Auto return type deduction
+  ❌ No constexpr lambdas
+
+C++17 - Compile-time:
+  ✅ All C++14 features
+  ✅ NEW: Constexpr lambdas
+  ✅ NEW: Lambdas in constant expressions
+  ✅ NEW: Structured bindings (not lambda-specific)
+  ❌ No template parameters
+
+C++20 - Template Meta-programming:
+  ✅ All C++17 features
+  ✅ NEW: Template parameters: []<typename T>(T x)
+  ✅ NEW: Concepts integration
+  ✅ NEW: Pack expansion in captures
+  ✅ NEW: Advanced type constraints

@@ -1,0 +1,7 @@
+$ ./00_cpp_version_check_cpp20
+
+__cplusplus value: 202002
+C++11 support: YES
+C++14 support: YES
+C++17 support: YES
+C++20 support: YES

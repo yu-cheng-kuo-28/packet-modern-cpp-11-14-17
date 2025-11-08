@@ -1,0 +1,100 @@
+$ ./01_simple_lambda_comparison_cpp20
+
+Lambda Evolution: Pure Syntax Progression
+========================================
+
+=== EDUCATIONAL: Lambda Evolution Demo ===
+Task: Apply a function to each number (simple doubling)
+Input: {1, 2, 3, 4, 5}
+
+=== C++11 Lambda (The Beginning) ===
+
+--- C++11: What you CAN do ---
+  Doubled: 2 4 6 8 10
+  Tripled: 3 6 9 12 15
+  ✅ Explicit types work
+  ✅ Basic capture by value works
+
+--- C++11: What you CANNOT do (will cause compile errors) ---
+  // ❌ C++11: Auto parameters - ILLEGAL
+  // auto lambda = [](auto x) { return x * 2; }; // ERROR!
+  // ❌ C++11: Init capture - ILLEGAL
+  // auto lambda = [multiplier = 4](int x) { return x * multiplier; }; // ERROR!
+  // ❌ C++11: Constexpr lambdas - ILLEGAL
+  // constexpr auto lambda = [](int x) constexpr { return x * 2; }; // ERROR!
+  // ❌ C++11: Template parameters - ILLEGAL
+  // auto lambda = []<typename T>(T x) { return x * 2; }; // ERROR!
+
+=== C++14 Lambda (Generic Power) ===
+
+--- C++14: NEW features that are now LEGAL ---
+  Doubled (int): 2 4 6 8 10
+  Doubled (double): 3 5 7
+  Processed: 4 8 12 16 20
+  ✅ NEW: Auto parameters work with any type
+  ✅ NEW: Auto return type deduction
+  ✅ NEW: Init capture creates variables
+
+--- C++14: What you STILL CANNOT do ---
+  // ❌ C++14: Constexpr lambdas - STILL ILLEGAL
+  // constexpr auto lambda = [](auto x) constexpr { return x * 2; }; // ERROR!
+  // ❌ C++14: Template parameters - STILL ILLEGAL
+  // auto lambda = []<typename T>(T x) { return x * 2; }; // ERROR!
+  // ❌ C++14: Concepts - STILL ILLEGAL
+  // auto lambda = [](auto x) requires std::is_arithmetic_v<decltype(x)> { ... }; // ERROR!
+
+=== C++17 Lambda (Constexpr Magic) ===
+
+--- C++17: NEW features that are now LEGAL ---
+  Runtime doubled: 2 4 6 8 10
+  Compile-time doubled: 10 (computed during compilation!)
+  ✅ NEW: Constexpr lambdas enable compile-time computation
+  ✅ NEW: Can use in constant expressions
+
+--- C++17: What you STILL CANNOT do ---
+  // ❌ C++17: Template parameters - STILL ILLEGAL
+  // auto lambda = []<typename T>(T x) { return x * 2; }; // ERROR!
+  // ❌ C++17: Concepts - STILL ILLEGAL
+  // auto lambda = [](auto x) requires std::is_arithmetic_v<decltype(x)> { ... }; // ERROR!
+
+=== C++20 Lambda (Template + Concepts) ===
+
+--- C++20: NEW features that are now LEGAL ---
+  Type-safe doubled: 2 4 6 8 10
+  ✅ NEW: Template parameters on lambdas
+  ✅ NEW: Concepts for type constraints
+  ✅ NEW: Compile-time type safety
+
+  // This would cause a compile error:
+  // safe_doubler(std::string("hello"));  // ❌ ERROR: string is not arithmetic
+
+=== Lambda Evolution Summary ===
+
+C++11 - The Foundation:
+  ✅ Explicit types and return types
+  ✅ Basic capture: [x], [&x], [=], [&]
+  ❌ No auto parameters
+  ❌ No init capture
+  ❌ No constexpr
+  ❌ No templates
+
+C++14 - Generic Power:
+  ✅ All C++11 features
+  ✅ NEW: Auto parameters (generic lambdas)
+  ✅ NEW: Auto return type deduction
+  ✅ NEW: Init capture
+  ❌ No constexpr
+  ❌ No templates
+
+C++17 - Compile-time:
+  ✅ All C++14 features
+  ✅ NEW: Constexpr lambdas
+  ✅ NEW: Compile-time computation
+  ❌ No template parameters
+  ❌ No concepts
+
+C++20 - Template Meta-programming:
+  ✅ All C++17 features
+  ✅ NEW: Template parameters
+  ✅ NEW: Concepts integration
+  ✅ NEW: Full type safety

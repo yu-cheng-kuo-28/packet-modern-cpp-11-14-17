@@ -1,0 +1,175 @@
+$ ./04_lambda_replace_bind
+
+=== HISTORICAL CONTEXT: Before C++11 ===
+Before C++11, partial application required:
+  - Manual functor classes (verbose)
+  - std::bind1st / std::bind2nd (limited, deprecated in C++11, removed in C++17)
+  - Boost.Bind library (popular but external dependency)
+
+Example (conceptual - won't compile here):
+  // C++03: Manual functor
+  struct AddN {
+      int n;
+      AddN(int val) : n(val) {}
+      int operator()(int x) const { return x + n; }
+  };
+  AddN add5(5);
+  std::transform(v.begin(), v.end(), result.begin(), add5);
+
+=== C++11: std::bind Introduction ===
+std::bind creates a FUNCTION OBJECT (callable) by:
+  1. Binding some arguments to fixed values (partial application)
+  2. Using placeholders (_1, _2, ...) for arguments to be provided later
+  3. Reordering arguments
+
+Key insight: std::bind returns a function object, NOT a function pointer.
+It creates a callable object that can be:
+  - Stored in std::function (type-erased polymorphic wrapper)
+  - Passed to algorithms
+  - Called like a function
+
+
+=== C++11 Example: Partial Application with std::bind ===
+--- Binding first argument of print_sum to 2 ---
+std::bind(print_sum, 2, _1): print_sum(2, 10) = 12
+C++11 lambda [](int x): print_sum(2, 10) = 12
+
+Note: Both create function objects, but lambda is clearer.
+
+=== C++11 Example: Binding Multiple Arguments ===
+--- Binding multiple arguments ---
+std::bind(multiply_and_print, 2, 3, _1): multiply_and_print(2, 3, 5) = 30
+Lambda equivalent: multiply_and_print(2, 3, 5) = 30
+
+=== C++11 Example: Member Functions with std::bind ===
+--- Binding member functions ---
+std::bind(&Foo::bar, &foo, _1):
+  Foo::bar(1)
+Foo::bar(2)
+Foo::bar(3)
+C++11 lambda [&foo](int x):
+  Foo::bar(1)
+Foo::bar(2)
+Foo::bar(3)
+
+=== std::bind and std::function: Polymorphism Concept ===
+std::bind returns a function object with SPECIFIC type (implementation-defined).
+std::function provides TYPE ERASURE - polymorphic wrapper for ANY callable.
+
+Example: storing different callables in std::function
+
+operation1 (bound std::bind): 10 + 5 = 15
+operation2 (lambda): 20 - 5 = 15
+
+Key point: std::function allows RUNTIME polymorphism of callables.
+Both std::bind results and lambdas can be stored in std::function.
+This is NOT about function pointers - it's about callable objects.
+
+=== C++11: Argument Reordering with std::bind ===
+--- std::bind can reorder arguments ---
+Original call print_sum(10, 20): print_sum(10, 20) = 30
+Reversed bind(_2, _1)(10, 20): print_sum(20, 10) = 30
+Lambda equivalent: print_sum(20, 10) = 30
+
+=== C++14: Generic Lambdas Make std::bind Nearly Obsolete ===
+C++14 introduced GENERIC LAMBDAS with auto parameters.
+This makes lambdas more flexible than std::bind for most use cases.
+
+--- C++14: Generic lambda vs std::bind ---
+std::bind result: 10 + 5 = 15
+C++14 generic lambda: 10 + 5 = 15
+
+C++14 lambda advantages:
+  ✅ Auto parameters - generic without templates
+  ✅ Auto return type deduction
+  ✅ Init capture (move semantics)
+  ✅ Clearer syntax
+
+--- C++14: Init capture (impossible with std::bind) ---
+Lambda with move capture: sum * 2 = 30
+Original vector is now empty: size = 0
+
+std::bind CANNOT do this - it only captures by copy or reference.
+
+=== Why std::bind Is Rarely Used in Modern C++ (C++14+) ===
+Reasons to prefer lambdas over std::bind:
+
+1. READABILITY
+   - std::bind: Placeholders (_1, _2) are cryptic
+   - Lambda: Parameters are explicit and clear
+
+2. TYPE SAFETY
+   - std::bind: Complex template types, hard to debug
+   - Lambda: Compiler-friendly types, better error messages
+
+3. OVERLOAD RESOLUTION
+   - std::bind: May bind wrong overload, requires explicit casts
+   - Lambda: Normal overload resolution rules apply
+
+4. PERFORMANCE
+   - std::bind: Extra template machinery, harder to optimize
+   - Lambda: Direct inline code, easier for compiler to optimize
+
+5. MODERN FEATURES (C++14+)
+   - std::bind: No init capture, no move semantics, no constexpr
+   - Lambda: Full support for init capture, move, constexpr, etc.
+
+=== Comparison Summary: std::bind vs Lambda ===
+┌─────────────────────────────┬────────────────────┬─────────────────────┐
+│ Feature                     │ std::bind (C++11)  │ Lambda (C++11/14+)  │
+├─────────────────────────────┼────────────────────┼─────────────────────┤
+│ Introduced                  │ C++11              │ C++11               │
+│ Readability                 │ ❌ Poor            │ ✅ Excellent        │
+│ Partial application         │ ✅ Yes             │ ✅ Yes              │
+│ Argument reordering         │ ✅ Yes             │ ✅ Yes (explicit)   │
+│ Generic parameters          │ ❌ No              │ ✅ Yes (C++14)      │
+│ Init capture / move         │ ❌ No              │ ✅ Yes (C++14)      │
+│ Overload safety             │ ❌ Fragile         │ ✅ Safe             │
+│ constexpr support           │ ❌ No              │ ✅ Yes (C++17)      │
+│ Modern status               │ ⚠️ Legacy           │ ✅ Preferred        │
+└─────────────────────────────┴────────────────────┴─────────────────────┘
+
+=== Clarification: std::bind vs Function Pointers vs Polymorphism ===
+IMPORTANT DISTINCTIONS:
+
+1. FUNCTION POINTER:
+   - Points to a specific function in memory
+   - Type: void(*)(int) or int(*)(int, int)
+   - Cannot capture state or bind arguments
+   - Example: void (*ptr)(int) = &print_sum;  // ERROR: wrong signature
+
+2. FUNCTION OBJECT (FUNCTOR):
+   - Object with operator() defined
+   - Can capture state (member variables)
+   - std::bind returns a function object
+   - Lambdas are function objects (compiler-generated class)
+
+3. std::function (POLYMORPHIC WRAPPER):
+   - Type-erased wrapper for ANY callable (function, lambda, bind result, functor)
+   - Provides runtime polymorphism via type erasure
+   - Slight overhead (virtual dispatch-like behavior)
+   - Example: std::function<int(int)> can hold lambda OR bind result
+
+KEY INSIGHT:
+  std::bind creates a FUNCTION OBJECT (not a pointer).
+  Polymorphism comes from std::function, not from std::bind itself.
+  Both std::bind and lambdas create callable objects that can be stored in std::function.
+
+=== Example: Function Pointer vs Function Object vs std::function ===
+Function pointer: add(3, 4) = 7
+std::bind object: bind(add, 10, _1)(5) = 15
+Lambda object: lambda(5) = 15
+std::function(bind): 15
+std::function(lambda): 15
+
+Note: std::function adds type erasure (runtime polymorphism).
+
+=== Final Recommendation ===
+✅ Use lambdas (C++11 basic, C++14 generic) for new code
+✅ Use std::function when you need polymorphic storage of different callables
+⚠️  Use std::bind only for maintaining legacy C++11 code
+❌ Avoid raw function pointers unless interfacing with C APIs
+
+Modern C++ idiom (C++14+):
+  auto my_callable = [captured_state](auto x) { return captured_state + x; };
+  std::function<int(int)> poly_callable = my_callable;  // If polymorphism needed

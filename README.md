@@ -44,21 +44,6 @@ $ ./01_simple_lambda_comparison_cpp20
 
 ---
 
-## 📖 Documentation Philosophy
-
-High-quality educational content that explains **why** features evolved, not just how to use them. Includes feature tables, real-world examples, historical context, and C++ Core Guidelines references.
-
----
-
-## 🤝 Contributing
-
-Educational repository based on Coursera materials. Contributions welcome for bug fixes, improved clarity, and better examples.
-
-**License:** Educational materials from Packt Coursera specialization  
-**Acknowledgments:** Packt Publishing, Coursera, C++ Community
-
----
-
 ## References
 
 [1] [Complete Modern C++ (C++11/14/17) Specialization](https://www.coursera.org/specializations/packt-complete-modern-c-c-11-14-17)

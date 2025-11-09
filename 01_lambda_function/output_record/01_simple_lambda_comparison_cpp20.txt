@@ -11,11 +11,17 @@ Input: {1, 2, 3, 4, 5}
 
 --- C++11: What you CAN do ---
   Doubled: 2 4 6 8 10
+  Simple doubler: 2 4 6 8 10
+  Absolute value: 2 1 0 1 2
   Tripled: 3 6 9 12 15
   ✅ Explicit types work
+  ✅ Single-return type deduction works
+  ✅ Multiple-return needs explicit -> T
   ✅ Basic capture by value works
 
 --- C++11: What you CANNOT do (will cause compile errors) ---
+  // ❌ C++11: Multiple return without explicit type - ILLEGAL
+  // auto lambda = [](int x) { if (x > 0) return x; return -x; }; // ERROR!
   // ❌ C++11: Auto parameters - ILLEGAL
   // auto lambda = [](auto x) { return x * 2; }; // ERROR!
   // ❌ C++11: Init capture - ILLEGAL
@@ -29,15 +35,19 @@ Input: {1, 2, 3, 4, 5}
 
 --- C++14: NEW features that are now LEGAL ---
   Doubled (int): 2 4 6 8 10
-  Doubled (double): 3 5 7
+  Doubled (double): 3 5 7 
+  Absolute value (int): 2 1 0 1 2
   Processed: 4 8 12 16 20
   ✅ NEW: Auto parameters work with any type
+  ✅ NEW: Multiple-return type deduction (C++11 restriction removed!)
   ✅ NEW: Auto return type deduction
   ✅ NEW: Init capture creates variables
 
 --- C++14: What you STILL CANNOT do ---
   // ❌ C++14: Constexpr lambdas - STILL ILLEGAL
   // constexpr auto lambda = [](auto x) constexpr { return x * 2; }; // ERROR!
+  // ❌ C++14: Structured bindings - STILL ILLEGAL (C++17 feature)
+  // auto [a, b] = some_lambda_returning_pair(); // ERROR!
   // ❌ C++14: Template parameters - STILL ILLEGAL
   // auto lambda = []<typename T>(T x) { return x * 2; }; // ERROR!
   // ❌ C++14: Concepts - STILL ILLEGAL
@@ -48,8 +58,10 @@ Input: {1, 2, 3, 4, 5}
 --- C++17: NEW features that are now LEGAL ---
   Runtime doubled: 2 4 6 8 10
   Compile-time doubled: 10 (computed during compilation!)
+  Structured binding from lambda: value=7, doubled=14
   ✅ NEW: Constexpr lambdas enable compile-time computation
   ✅ NEW: Can use in constant expressions
+  ✅ NEW: Structured bindings unpack lambda returns
 
 --- C++17: What you STILL CANNOT do ---
   // ❌ C++17: Template parameters - STILL ILLEGAL
@@ -73,6 +85,8 @@ Input: {1, 2, 3, 4, 5}
 C++11 - The Foundation:
   ✅ Explicit types and return types
   ✅ Basic capture: [x], [&x], [=], [&]
+  ✅ Single-return type deduction
+  ❌ No multiple-return type deduction
   ❌ No auto parameters
   ❌ No init capture
   ❌ No constexpr
@@ -81,17 +95,17 @@ C++11 - The Foundation:
 C++14 - Generic Power:
   ✅ All C++11 features
   ✅ NEW: Auto parameters (generic lambdas)
-  ✅ NEW: Auto return type deduction
+  ✅ NEW: Multiple-return type deduction
   ✅ NEW: Init capture
   ❌ No constexpr
+  ❌ No structured bindings
   ❌ No templates
 
 C++17 - Compile-time:
   ✅ All C++14 features
   ✅ NEW: Constexpr lambdas
-  ✅ NEW: Compile-time computation
-  ❌ No template parameters
-  ❌ No concepts
+  ✅ NEW: Structured bindings
+  ❌ No templates
 
 C++20 - Template Meta-programming:
   ✅ All C++17 features

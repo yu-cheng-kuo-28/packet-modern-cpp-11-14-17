@@ -14,10 +14,15 @@ Input: {1, -2, 3, -4, 5, -6, 7, -8, 9, -10}
   Positive numbers: 1 3 5 7 9
   Squared: 1 9 25 49 81
   Sum: 165
+  Abs value demo: 5, 5
   ✅ Explicit types work
+  ✅ Single-return type deduction works
+  ✅ Multiple-return needs explicit -> T
   ✅ Separate steps work
 
 --- C++11: What you CANNOT do ---
+  // ❌ C++11: Multiple return without explicit type - ILLEGAL
+  // auto abs = [](int x) { if (x > 0) return x; return -x; }; // ERROR!
   // ❌ C++11: Generic lambdas - ILLEGAL
   // auto is_positive = [](auto x) { return x > 0; }; // ERROR!
   // ❌ C++11: Init capture - ILLEGAL
@@ -31,13 +36,17 @@ Input: {1, -2, 3, -4, 5, -6, 7, -8, 9, -10}
   Pipeline: combined filter + transform + reduce
   Sum of squared positives: 165
   Sum of doubled positives: 50
+  Abs value (multi-return deduction): 7
   ✅ NEW: Generic lambdas with auto parameters
+  ✅ NEW: Multiple-return type deduction (C++11 fix!)
   ✅ NEW: Init capture for inline variables
   ✅ NEW: Auto return type deduction
 
 --- C++14: What you STILL CANNOT do ---
   // ❌ C++14: Constexpr lambdas - STILL ILLEGAL
   // constexpr auto square = [](auto x) constexpr { return x * x; }; // ERROR!
+  // ❌ C++14: Structured bindings - STILL ILLEGAL (C++17 feature)
+  // auto [min, max] = some_lambda_returning_pair(); // ERROR!
   // ❌ C++14: Template parameters - STILL ILLEGAL
   // auto lambda = []<typename T>(T x) { return x * x; }; // ERROR!
 
@@ -47,8 +56,10 @@ Input: {1, -2, 3, -4, 5, -6, 7, -8, 9, -10}
   Pipeline: constexpr processing for optimization
   Sum of squared positives: 165
   Compile-time demo: process_value(5) = 25
+  Structured binding: 5 positives, 5 negatives
   ✅ NEW: Constexpr lambdas
   ✅ NEW: Compile-time computation
+  ✅ NEW: Structured bindings with lambda returns
   ✅ NEW: Performance optimizations
 
 --- C++17: What you STILL CANNOT do ---
@@ -67,7 +78,7 @@ Input: {1, -2, 3, -4, 5, -6, 7, -8, 9, -10}
   ✅ NEW: Type safety guarantees
 
   // This would cause a compile error:
-  // safe_processor(std::vector<std::string>{"a"}, pred, trans); // ❌ ERROR: string not arithmetic   
+  // safe_processor(std::vector<std::string>{"a"}, pred, trans); // ❌ ERROR: string not arithmetic
 
 
 === Lambda Evolution Summary ===
@@ -75,6 +86,8 @@ Input: {1, -2, 3, -4, 5, -6, 7, -8, 9, -10}
 C++11 - The Foundation:
   ✅ Basic lambdas with explicit types
   ✅ Simple captures
+  ✅ Single-return type deduction
+  ❌ No multiple-return type deduction
   ❌ No generic lambdas
   ❌ No init capture
   ❌ No constexpr
@@ -83,15 +96,16 @@ C++11 - The Foundation:
 C++14 - Generic Power:
   ✅ All C++11 features
   ✅ NEW: Generic lambdas (auto params)
+  ✅ NEW: Multiple-return type deduction
   ✅ NEW: Init captures
-  ✅ NEW: Auto return type deduction
   ❌ No constexpr
+  ❌ No structured bindings
   ❌ No templates
 
 C++17 - Compile-time:
   ✅ All C++14 features
   ✅ NEW: Constexpr lambdas
-  ✅ NEW: Structured bindings
+  ✅ NEW: Structured bindings with lambda returns
   ✅ NEW: Enhanced algorithms
   ❌ No template parameters
   ❌ No concepts

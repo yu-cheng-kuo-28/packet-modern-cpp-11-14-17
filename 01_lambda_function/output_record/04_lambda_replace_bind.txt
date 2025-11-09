@@ -1,22 +1,52 @@
-$ ./04_lambda_replace_bind
+$ ./04_lambda_replace_bind_cpp14
 
-=== HISTORICAL CONTEXT: Before C++11 ===
-Before C++11, partial application required:
-  - Manual functor classes (verbose)
-  - std::bind1st / std::bind2nd (limited, deprecated in C++11, removed in C++17)
-  - Boost.Bind library (popular but external dependency)
+=== THE EVOLUTION: Functors → std::bind → Lambdas ===
+This demonstration shows THREE stages of callable object evolution:
+  1. Pre-C++11: Manual Functors (struct with operator())
+  2. C++11:     std::bind (automated functor generation)
+  3. C++14+:    Lambdas (inline, type-safe, clear)
 
-Example (conceptual - won't compile here):
-  // C++03: Manual functor
-  struct AddN {
-      int n;
-      AddN(int val) : n(val) {}
-      int operator()(int x) const { return x + n; }
+KEY CONCEPT: A lambda IS a functor!
+The compiler generates the struct and operator() for you.
+
+
+=== ACT I: The Functor Era (Pre-C++11) ===
+WHAT IS A FUNCTOR?
+A functor (function object) is any object that overloads operator().
+It lets you store STATE and behave like a function.
+
+--- Example: Manual Functor ---
+Code:
+  struct Multiplier {
+      int factor;
+      explicit Multiplier(int f) : factor(f) {}
+      int operator()(int x) const { return x * factor; }
   };
-  AddN add5(5);
-  std::transform(v.begin(), v.end(), result.begin(), add5);
 
-=== C++11: std::bind Introduction ===
+Usage:
+  Multiplier times2(2);
+  times2(10) = 20  // Calls operator()(10)
+  times2(5)  = 10
+
+With STL algorithm:
+  std::transform(v.begin(), v.end(), result.begin(), Multiplier(2));
+  Result: 2 4 6 8 10
+
+PROBLEMS WITH MANUAL FUNCTORS:
+  ❌ Boilerplate hell (7+ lines for simple multiply)
+  ❌ Scope pollution (named types everywhere)
+  ❌ Poor readability (intent hidden in implementation)
+
+
+=== ACT II: The std::bind Era (C++11) ===
+WHAT IS std::bind?
+std::bind is a FUNCTOR GENERATOR - it creates function objects automatically!
+Instead of writing a struct with operator(), std::bind does it for you.
+
+Comparison:
+  Pre-C++11:  struct Multiplier { int factor; ... operator()... };  // 7 lines
+  C++11:      auto times2 = std::bind(std::multiplies<int>(), _1, 2);  // 1 line!
+
 std::bind creates a FUNCTION OBJECT (callable) by:
   1. Binding some arguments to fixed values (partial application)
   2. Using placeholders (_1, _2, ...) for arguments to be provided later
@@ -27,6 +57,12 @@ It creates a callable object that can be:
   - Stored in std::function (type-erased polymorphic wrapper)
   - Passed to algorithms
   - Called like a function
+
+PROBLEMS WITH std::bind:
+  ⚠️ Placeholder syntax (_1, _2) is cryptic
+  ⚠️ Complex template types, hard to debug
+  ⚠️ Fragile with overloaded functions
+  ⚠️ Cannot capture by move (no init capture)
 
 
 === C++11 Example: Partial Application with std::bind ===
@@ -51,6 +87,23 @@ C++11 lambda [&foo](int x):
   Foo::bar(1)
 Foo::bar(2)
 Foo::bar(3)
+
+Member Function Callbacks: Real-world use case
+Common pattern: Binding 'this' pointer for callbacks
+
+Example: Event handler registration
+  C++11 std::bind:
+    auto callback = std::bind(&Foo::process, this, _1);
+    event_system.register_handler(callback);
+
+  C++11 lambda (clearer):
+    auto callback = [this](const std::string& data) { process(data); };
+    event_system.register_handler(callback);
+
+Simulating event processing:
+Foo::process("event1")
+Foo::process("event2")
+Foo::process("event3")
 
 === std::bind and std::function: Polymorphism Concept ===
 std::bind returns a function object with SPECIFIC type (implementation-defined).
@@ -91,6 +144,27 @@ Original vector is now empty: size = 0
 
 std::bind CANNOT do this - it only captures by copy or reference.
 
+--- C++14: Perfect Forwarding with Generic Lambdas ---
+Generic lambdas enable perfect forwarding patterns that std::bind struggles with.
+
+Use case: Generic callback wrapper that forwards arguments efficiently
+Code pattern:
+  auto callback = [](auto&& arg) {
+      process(std::forward<decltype(arg)>(arg));
+  };
+
+Why this matters:
+  - Preserves lvalue/rvalue-ness (no unnecessary copies)
+  - Works with move-only types (std::unique_ptr, etc.)
+  - std::bind requires complex std::ref/std::cref workarounds
+
+Forwarding lvalue: Foo::process("lvalue_string")
+Forwarding rvalue: Foo::process("rvalue_string")
+
+Comparison with std::bind:
+  std::bind: Requires std::ref for references, cannot forward perfectly
+  Lambda:    Natural forwarding with auto&& and std::forward
+
 === Why std::bind Is Rarely Used in Modern C++ (C++14+) ===
 Reasons to prefer lambdas over std::bind:
 
@@ -114,20 +188,27 @@ Reasons to prefer lambdas over std::bind:
    - std::bind: No init capture, no move semantics, no constexpr
    - Lambda: Full support for init capture, move, constexpr, etc.
 
-=== Comparison Summary: std::bind vs Lambda ===
-┌─────────────────────────────┬────────────────────┬─────────────────────┐
-│ Feature                     │ std::bind (C++11)  │ Lambda (C++11/14+)  │
-├─────────────────────────────┼────────────────────┼─────────────────────┤
-│ Introduced                  │ C++11              │ C++11               │
-│ Readability                 │ ❌ Poor            │ ✅ Excellent        │
-│ Partial application         │ ✅ Yes             │ ✅ Yes              │
-│ Argument reordering         │ ✅ Yes             │ ✅ Yes (explicit)   │
-│ Generic parameters          │ ❌ No              │ ✅ Yes (C++14)      │
-│ Init capture / move         │ ❌ No              │ ✅ Yes (C++14)      │
-│ Overload safety             │ ❌ Fragile         │ ✅ Safe             │
-│ constexpr support           │ ❌ No              │ ✅ Yes (C++17)      │
-│ Modern status               │ ⚠️ Legacy           │ ✅ Preferred        │
-└─────────────────────────────┴────────────────────┴─────────────────────┘
+=== Comparison Summary: Functors vs std::bind vs Lambda ===
+┌─────────────────────────────┬──────────────────────┬────────────────────┬─────────────────────┐
+│ Feature                     │ Functor (Pre-C++11)  │ std::bind (C++11)  │ Lambda (C++11/14+)  │
+├─────────────────────────────┼──────────────────────┼────────────────────┼─────────────────────┤
+│ Syntax verbosity            │ ❌ 7+ lines          │ ⚠️ Medium          │ ✅ 1 line           │
+│ Readability                 │ ⚠️ Fair              │ ❌ Poor            │ ✅ Excellent        │
+│ Partial application         │ ✅ Yes (manual)      │ ✅ Yes             │ ✅ Yes              │
+│ State capture               │ ✅ Yes (members)     │ ✅ Yes (copy/ref)  │ ✅ Yes (capture)    │
+│ Argument reordering         │ ✅ Yes (manual)      │ ✅ Yes             │ ✅ Yes (explicit)   │
+│ Generic parameters          │ ⚠️ Requires template │ ❌ No              │ ✅ Yes (C++14)      │
+│ Move semantics              │ ✅ Yes (manual)      │ ❌ No              │ ✅ Yes (C++14)      │
+│ Perfect forwarding          │ ✅ Yes (manual)      │ ⚠️ Complex         │ ✅ Easy (C++14)     │
+│ Overload safety             │ ✅ Safe              │ ❌ Fragile         │ ✅ Safe             │
+│ Inline at call site         │ ❌ No                │ ❌ No              │ ✅ Yes              │
+│ Modern status               │ ⚠️ When needed       │ ⚠️ Legacy          │ ✅ Preferred        │
+└─────────────────────────────┴──────────────────────┴────────────────────┴─────────────────────┘
+
+EVOLUTION INSIGHT:
+  Functors → std::bind:  Automated functor generation, reduced boilerplate
+  std::bind → Lambdas:   Inline syntax, type safety, modern features
+  All three compile to the same machine code - it's about DEVELOPER EXPERIENCE!
 
 === Clarification: std::bind vs Function Pointers vs Polymorphism ===
 IMPORTANT DISTINCTIONS:
@@ -165,11 +246,42 @@ std::function(lambda): 15
 Note: std::function adds type erasure (runtime polymorphism).
 
 === Final Recommendation ===
-✅ Use lambdas (C++11 basic, C++14 generic) for new code
-✅ Use std::function when you need polymorphic storage of different callables
-⚠️  Use std::bind only for maintaining legacy C++11 code
-❌ Avoid raw function pointers unless interfacing with C APIs
+THE EVOLUTION COMPLETE:
+  Pre-C++11: Manual functors (necessary but verbose)
+  C++11:     std::bind (automated but cryptic)
+  C++14+:    Lambdas (clean, safe, feature-rich)
+
+WHEN TO USE EACH:
+
+✅ LAMBDAS (Preferred for all new code)
+   - Any C++11 code: Basic lambdas work fine
+   - C++14+: Generic lambdas for maximum flexibility
+   - C++17+: constexpr lambdas for compile-time computation
+   - C++20+: Template lambdas, concept-constrained lambdas
+
+✅ FUNCTORS (When you need specific control)
+   - Public member functions (not just operator())
+   - Complex state management with multiple methods
+   - Inheritance hierarchies
+   - When you want a named, reusable class
+
+⚠️  std::bind (Only for legacy code)
+   - Maintaining existing C++11 codebases
+   - When migrating from Boost.Bind
+   - Consider refactoring to lambdas when possible
+
+❌ AVOID (Unless interfacing with C)
+   - Raw function pointers (use std::function instead)
+   - C++03 std::bind1st/bind2nd (removed in C++17)
 
 Modern C++ idiom (C++14+):
+  // Simple inline lambda
   auto my_callable = [captured_state](auto x) { return captured_state + x; };
-  std::function<int(int)> poly_callable = my_callable;  // If polymorphism needed
+
+  // Member function callback with perfect forwarding
+  auto callback = [this](auto&& arg) {
+      this->process(std::forward<decltype(arg)>(arg));
+  };
+
+  // Polymorphic storage (if needed)
+  std::function<int(int)> poly_callable = my_callable;

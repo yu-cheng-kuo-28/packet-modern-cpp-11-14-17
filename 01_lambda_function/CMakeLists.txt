@@ -19,6 +19,7 @@ set(SOURCES
     01_simple_lambda_comparison.cpp
     02_lambda_feature_comparison.cpp
     03_lambda_evolution_demo.cpp
+    04_lambda_replace_bind.cpp
 )
 
 # Define target names for each demo type
@@ -65,6 +66,16 @@ foreach(std ${CPP_STANDARDS})
     message(STATUS "Created target: ${target_name} (C++${std})")
 endforeach()
 
+# Special handling for 04_lambda_replace_bind.cpp - only C++14
+add_executable(04_lambda_replace_bind_cpp14 "04_lambda_replace_bind.cpp")
+set_target_properties(04_lambda_replace_bind_cpp14 PROPERTIES
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
+message(STATUS "Created target: 04_lambda_replace_bind_cpp14 (C++14 only)")
+
+
 # === CONVENIENCE TARGETS ===
 
 # Build all versions of each demo type
@@ -83,13 +94,18 @@ add_custom_target(all-comparison
     COMMENT "Building all feature comparison versions"
 )
 
+add_custom_target(all-bind-replacement
+    DEPENDS 04_lambda_replace_bind_cpp14
+    COMMENT "Building std::bind replacement demo (C++14 only)"
+)
+
 add_custom_target(all-version-check
     DEPENDS 00_cpp_version_check_cpp11 00_cpp_version_check_cpp14 00_cpp_version_check_cpp17 00_cpp_version_check_cpp20
     COMMENT "Building all version check versions"
 )
 
 add_custom_target(all-demos
-    DEPENDS all-full all-simple all-comparison all-version-check
+    DEPENDS all-full all-simple all-comparison all-bind-replacement all-version-check
     COMMENT "Building all demo versions"
 )
 
@@ -115,6 +131,14 @@ endfunction()
 create_run_target("03_lambda_evolution_demo.cpp" "Full Lambda Evolution Demo")
 create_run_target("01_simple_lambda_comparison.cpp" "Simple Lambda Comparison")
 create_run_target("02_lambda_feature_comparison.cpp" "Feature Comparison Demo")
+
+# Create run target for bind replacement demo (C++14 only)
+add_custom_target(run-04_lambda_replace_bind_cpp14
+    COMMAND 04_lambda_replace_bind_cpp14
+    DEPENDS 04_lambda_replace_bind_cpp14
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Running std::bind Replacement Demo (C++14)"
+)
 
 # Create run targets for version check
 foreach(std ${CPP_STANDARDS})
@@ -167,6 +191,13 @@ add_custom_target(run-all-comparison
     COMMENT "Running all feature comparison versions"
 )
 
+add_custom_target(run-all-bind-replacement
+    COMMAND 04_lambda_replace_bind_cpp14
+    DEPENDS all-bind-replacement
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Running std::bind replacement demo"
+)
+
 add_custom_target(run-all-version-check
     COMMAND 00_cpp_version_check_cpp11
     COMMAND echo "\\n\\n=== C++14 Version Check ==="
@@ -181,7 +212,7 @@ add_custom_target(run-all-version-check
 )
 
 add_custom_target(run-all-demos
-    DEPENDS run-all-full run-all-simple run-all-comparison run-all-version-check
+    DEPENDS run-all-full run-all-simple run-all-comparison run-all-bind-replacement run-all-version-check
     COMMENT "Running all demo versions"
 )
 
@@ -220,6 +251,7 @@ add_custom_target(show-help
     COMMAND ${CMAKE_COMMAND} -E echo "  all-full          - Build all full demo versions"
     COMMAND ${CMAKE_COMMAND} -E echo "  all-simple        - Build all simple comparison versions"
     COMMAND ${CMAKE_COMMAND} -E echo "  all-comparison    - Build all feature comparison versions"
+    COMMAND ${CMAKE_COMMAND} -E echo "  all-bind-replacement - Build std::bind replacement demo (C++14 only)"
     COMMAND ${CMAKE_COMMAND} -E echo "  all-version-check - Build all version check versions"
     COMMAND ${CMAKE_COMMAND} -E echo "  all-demos         - Build all demo versions"
     COMMAND ${CMAKE_COMMAND} -E echo ""
@@ -230,6 +262,7 @@ add_custom_target(show-help
     COMMAND ${CMAKE_COMMAND} -E echo "  run-all-full      - Run all full demo versions"
     COMMAND ${CMAKE_COMMAND} -E echo "  run-all-simple    - Run all simple versions"
     COMMAND ${CMAKE_COMMAND} -E echo "  run-all-comparison - Run all feature comparison versions"
+    COMMAND ${CMAKE_COMMAND} -E echo "  run-all-bind-replacement - Run std::bind replacement demo"
     COMMAND ${CMAKE_COMMAND} -E echo "  run-all-version-check - Run all version checks"
     COMMAND ${CMAKE_COMMAND} -E echo "  run-all-demos     - Run all demo versions"
     COMMAND ${CMAKE_COMMAND} -E echo ""

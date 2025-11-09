@@ -32,17 +32,29 @@ void demonstrate_cpp11_vs_cpp14_comparison() {
             return 2.71;
         };
         
-        // ✅ C++11: Simple return type deduction (single return statement)
+        // ✅ C++11: Simple return type deduction (SINGLE return statement ONLY)
         auto lambda6 = [](int x) { return x * 2; };                                 // Can deduce int
+        
+        // ❌ C++11: Multiple return statements require explicit type
+        // auto lambda7 = [](int x) { if (x > 0) return x; else return -x; };       // ERROR! Must use -> int
+        auto lambda7 = [](int x) -> int {                                            // Explicit type required
+            if (x > 0) return x;
+            else return -x;
+        };
         
         std::cout << "  Basic captures work: " << lambda1(5) << std::endl;
         std::cout << "  Explicit return types work: " << lambda5(1) << std::endl;
+        std::cout << "  Single-return deduction works: " << lambda6(5) << std::endl;
+        std::cout << "  Multi-return needs explicit type: " << lambda7(-5) << std::endl;
         // Silence unused-variable warnings for the examples we don't call below
-        (void)lambda2; (void)lambda3; (void)lambda4; (void)lambda6;
+        (void)lambda2; (void)lambda3; (void)lambda4;
     }
     
     std::cout << "\n--- C++11: What you CANNOT do (will cause compile errors) ---\n";
     {
+        std::cout << "  // ❌ C++11: Multiple return statements without explicit type - ILLEGAL\n";
+        std::cout << "  // auto lambda = [](int x) { if (x > 0) return x; return -x; }; // ERROR!\n";
+        
         std::cout << "  // ❌ C++11: Init capture - ILLEGAL\n";
         std::cout << "  // auto lambda = [y = multiplier * 2](int x) { return x * y; }; // ERROR!\n";
         
@@ -51,9 +63,6 @@ void demonstrate_cpp11_vs_cpp14_comparison() {
         
         std::cout << "  // ❌ C++11: Auto parameters - ILLEGAL\n";
         std::cout << "  // auto lambda = [](auto x) { return x * 2; }; // ERROR!\n";
-        
-        std::cout << "  // ❌ C++11: Complex auto return type - ILLEGAL\n";
-        std::cout << "  // auto lambda = [](bool flag) { if (flag) return 3.14; return 42; }; // ERROR!\n";
     }
 
 #if __cplusplus >= 201402L
@@ -73,11 +82,11 @@ void demonstrate_cpp11_vs_cpp14_comparison() {
         auto lambda4 = [](auto x) { return x * 2; };                                // ✅ NEW: Works with any type
         auto lambda5 = [](auto x, auto y) { return x + y; };                        // ✅ NEW: Multiple auto params
         
-        // ✅ C++14: Auto return type deduction - NEW!
-        auto lambda6 = [](bool flag) {                                               // ✅ NEW: No -> needed
-            if (flag) return 3.14;   // double
-            return 3.14;             // Must be same type, but auto deduced
-        };
+        // ✅ C++14: Multiple-return type deduction - NEW!
+        auto lambda6 = [](int x) {                                                   // ✅ NEW: No explicit -> int needed!
+            if (x > 0) return x;
+            else return -x;
+        };  // C++11 ERROR fixed! Multiple returns now work without explicit type
         
         // ✅ C++14: Complex generic operations - NEW!
         auto lambda7 = [](auto container, auto init, auto op) {                     // ✅ NEW: Generic algorithms
@@ -88,7 +97,7 @@ void demonstrate_cpp11_vs_cpp14_comparison() {
         std::cout << "  Move capture: " << lambda3(3) << std::endl; 
         std::cout << "  Generic lambda (int): " << lambda4(5) << std::endl;
         std::cout << "  Generic lambda (double): " << lambda4(3.14) << std::endl;
-        std::cout << "  Auto return: " << lambda6(true) << std::endl;
+        std::cout << "  Multi-return deduction: " << lambda6(-10) << std::endl;
         
         auto sum_result = lambda7(data, 0, [](auto a, auto b) { return a + b; });
         std::cout << "  Generic algorithm: " << sum_result << std::endl;
@@ -124,8 +133,11 @@ void demonstrate_cpp14_vs_cpp17_comparison() {
         std::cout << "  // ❌ C++14: Constexpr lambdas - ILLEGAL\n";
         std::cout << "  // constexpr auto lambda = [](auto x) constexpr { return x * 2; }; // ERROR!\n";
         
-        std::cout << "  // ❌ C++14: Structured bindings with lambdas - ILLEGAL\n";
+        std::cout << "  // ❌ C++14: Structured bindings - ILLEGAL (C++17 feature)\n";
         std::cout << "  // auto [min, max] = some_lambda_returning_pair(); // ERROR!\n";
+        
+        std::cout << "  // ❌ C++14: Capture *this by value - ILLEGAL (C++17 feature)\n";
+        std::cout << "  // auto lambda = [*this]() { return value; }; // ERROR!\n";
     }
 
 #if __cplusplus >= 201703L
@@ -147,11 +159,18 @@ void demonstrate_cpp14_vs_cpp17_comparison() {
         constexpr auto get_array_size = [](int base) constexpr { return base * base; };
         std::array<int, get_array_size(3)> const_array{};                           // Array size = 9, computed at compile-time
         
+        // ✅ C++17: Structured bindings with lambda returns - NEW!
+        auto make_pair_lambda = [](int x) { return std::make_pair(x, x * 2); };
+        auto [a, b] = make_pair_lambda(10);                                          // ✅ NEW: Structured binding unpacks pair!
+        
+        // ✅ C++17: Lambda returning tuple with structured binding - NEW!
+        auto split_lambda = [](int x) {
+            return std::tuple{x, x * 2, x * 3};
+        };
+        auto [first, second, third] = split_lambda(5);                               // ✅ NEW: Unpack tuple!
+        
         // ✅ C++17: Structured bindings with algorithms - NEW!
-        auto result_pair = std::minmax_element(data.begin(), data.end());           
-        // auto [min_it, max_it] = std::minmax_element(data.begin(), data.end());   // ✅ NEW: Structured bindings (C++17)
-        auto min_val = *result_pair.first;
-        auto max_val = *result_pair.second;
+        auto [min_it, max_it] = std::minmax_element(data.begin(), data.end());      // ✅ NEW: Structured bindings (C++17)
         
         // ✅ C++17: Constexpr lambdas in algorithms - NEW!
         auto transform_result = std::accumulate(data.begin(), data.end(), 0,
@@ -162,7 +181,9 @@ void demonstrate_cpp14_vs_cpp17_comparison() {
         std::cout << "  Constexpr lambda result: " << compile_time_result << std::endl;
         std::cout << "  Array size from constexpr: " << compile_time_array.size() << std::endl;
         std::cout << "  Const array size from lambda: " << const_array.size() << std::endl;
-        std::cout << "  Min/Max: " << min_val << "/" << max_val << std::endl;
+        std::cout << "  Structured binding from lambda: " << a << ", " << b << std::endl;
+        std::cout << "  Tuple unpacking: " << first << ", " << second << ", " << third << std::endl;
+        std::cout << "  Min/Max from structured binding: " << *min_it << "/" << *max_it << std::endl;
         std::cout << "  Constexpr in algorithm: " << transform_result << std::endl;
     }
 #else
@@ -256,26 +277,27 @@ void demonstrate_evolution_summary() {
     std::cout << "C++11 - The Foundation:\n";
     std::cout << "  ✅ Basic captures: [x], [&x], [=], [&]\n";
     std::cout << "  ✅ Explicit return types: [](int x) -> int\n";
+    std::cout << "  ✅ Single-return type deduction\n";
     std::cout << "  ✅ Simple type-specific lambdas\n";
+    std::cout << "  ❌ No multiple-return type deduction\n";
     std::cout << "  ❌ No auto parameters\n";
     std::cout << "  ❌ No init capture\n";
     std::cout << "  ❌ No move capture\n";
-    std::cout << "  ❌ No auto return type deduction\n";
     std::cout << "  ❌ No constexpr\n\n";
     
     std::cout << "C++14 - Generic Power:\n";
     std::cout << "  ✅ All C++11 features\n";
     std::cout << "  ✅ NEW: Auto parameters: [](auto x)\n";
+    std::cout << "  ✅ NEW: Multiple-return type deduction\n";
     std::cout << "  ✅ NEW: Init capture: [y = expr]\n";
     std::cout << "  ✅ NEW: Move capture: [v = std::move(x)]\n";
-    std::cout << "  ✅ NEW: Auto return type deduction\n";
-    std::cout << "  ❌ No constexpr lambdas\n\n";
+    std::cout << "  ❌ No constexpr lambdas\n";
+    std::cout << "  ❌ No structured bindings\n\n";
     
     std::cout << "C++17 - Compile-time:\n";
     std::cout << "  ✅ All C++14 features\n";
     std::cout << "  ✅ NEW: Constexpr lambdas\n";
-    std::cout << "  ✅ NEW: Lambdas in constant expressions\n";
-    std::cout << "  ✅ NEW: Structured bindings (not lambda-specific)\n";
+    std::cout << "  ✅ NEW: Structured bindings\n";
     std::cout << "  ❌ No template parameters\n\n";
     
     std::cout << "C++20 - Template Meta-programming:\n";

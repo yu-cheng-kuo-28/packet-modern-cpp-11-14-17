@@ -21,10 +21,18 @@ void demonstrate_practical_evolution() {
     std::cout << "=== C++11 Approach (Verbose) ===\n";
     std::cout << "\n--- C++11: What you CAN do ---\n";
     {
-        // ✅ Separate lambdas for each operation
+        // ✅ Separate lambdas for each operation (explicit types required)
         auto is_positive = [](int x) -> bool { return x > 0; };
         auto square = [](int x) -> int { return x * x; };
         auto add = [](int a, int b) -> int { return a + b; };
+        
+        // ✅ Single-return deduction works, but multi-return needs explicit type
+        auto abs_value = [](int x) { return x > 0 ? x : -x; };  // Single return - OK
+        // auto abs_value2 = [](int x) { if (x > 0) return x; return -x; }; // ❌ ERROR! Need -> int
+        auto abs_value2 = [](int x) -> int {  // Explicit type required for multiple returns
+            if (x > 0) return x;
+            return -x;
+        };
         
         // Multi-step process
         std::vector<int> positives;
@@ -41,12 +49,18 @@ void demonstrate_practical_evolution() {
         std::cout << "\n  Squared: ";
         for (int n : squared) std::cout << n << " ";
         std::cout << "\n  Sum: " << sum << std::endl;
+        std::cout << "  Abs value demo: " << abs_value(-5) << ", " << abs_value2(-5) << std::endl;
         std::cout << "  ✅ Explicit types work\n";
+        std::cout << "  ✅ Single-return type deduction works\n";
+        std::cout << "  ✅ Multiple-return needs explicit -> T\n";
         std::cout << "  ✅ Separate steps work\n";
     }
     
     std::cout << "\n--- C++11: What you CANNOT do ---\n";
     {
+        std::cout << "  // ❌ C++11: Multiple return without explicit type - ILLEGAL\n";
+        std::cout << "  // auto abs = [](int x) { if (x > 0) return x; return -x; }; // ERROR!\n";
+        
         std::cout << "  // ❌ C++11: Generic lambdas - ILLEGAL\n";
         std::cout << "  // auto is_positive = [](auto x) { return x > 0; }; // ERROR!\n";
         
@@ -67,6 +81,12 @@ void demonstrate_practical_evolution() {
         auto is_positive = [](auto x) { return x > 0; };
         auto square = [](auto x) { return x * x; };
         
+        // ✅ NEW: Multiple return type deduction (C++11 limitation removed!)
+        auto abs_value = [](auto x) {  // No explicit -> T needed anymore!
+            if (x > 0) return x;
+            return -x;  // Multiple returns now work with auto deduction
+        };
+        
         // Single-pass processing with generic lambda
         auto result = std::accumulate(data.begin(), data.end(), 0,
             [is_positive, square](auto sum, auto value) {
@@ -86,7 +106,9 @@ void demonstrate_practical_evolution() {
         std::cout << "  Pipeline: combined filter + transform + reduce\n";
         std::cout << "  Sum of squared positives: " << result << std::endl;
         std::cout << "  Sum of doubled positives: " << transformed_result << std::endl;
+        std::cout << "  Abs value (multi-return deduction): " << abs_value(-7) << std::endl;
         std::cout << "  ✅ NEW: Generic lambdas with auto parameters\n";
+        std::cout << "  ✅ NEW: Multiple-return type deduction (C++11 fix!)\n";
         std::cout << "  ✅ NEW: Init capture for inline variables\n";
         std::cout << "  ✅ NEW: Auto return type deduction\n";
     }
@@ -95,6 +117,9 @@ void demonstrate_practical_evolution() {
     {
         std::cout << "  // ❌ C++14: Constexpr lambdas - STILL ILLEGAL\n";
         std::cout << "  // constexpr auto square = [](auto x) constexpr { return x * x; }; // ERROR!\n";
+        
+        std::cout << "  // ❌ C++14: Structured bindings - STILL ILLEGAL (C++17 feature)\n";
+        std::cout << "  // auto [min, max] = some_lambda_returning_pair(); // ERROR!\n";
         
         std::cout << "  // ❌ C++14: Template parameters - STILL ILLEGAL\n";
         std::cout << "  // auto lambda = []<typename T>(T x) { return x * x; }; // ERROR!\n";
@@ -115,6 +140,17 @@ void demonstrate_practical_evolution() {
             return (value > 0) ? value * value : 0;
         };
         
+        // ✅ NEW: Structured bindings with lambda returns
+        auto get_stats = [](const std::vector<int>& vec) {
+            int pos_count = 0, neg_count = 0;
+            for (auto v : vec) {
+                if (v > 0) ++pos_count;
+                else if (v < 0) ++neg_count;
+            }
+            return std::make_pair(pos_count, neg_count);
+        };
+        auto [positives, negatives] = get_stats(data);  // ✅ NEW: Structured binding!
+        
         auto result = std::accumulate(data.begin(), data.end(), 0,
             [process_value](auto sum, auto value) constexpr {
                 return sum + process_value(value);
@@ -126,8 +162,10 @@ void demonstrate_practical_evolution() {
         std::cout << "  Pipeline: constexpr processing for optimization\n";
         std::cout << "  Sum of squared positives: " << result << std::endl;
         std::cout << "  Compile-time demo: process_value(5) = " << compile_time_result << std::endl;
+        std::cout << "  Structured binding: " << positives << " positives, " << negatives << " negatives\n";
         std::cout << "  ✅ NEW: Constexpr lambdas\n";
         std::cout << "  ✅ NEW: Compile-time computation\n";
+        std::cout << "  ✅ NEW: Structured bindings with lambda returns\n";
         std::cout << "  ✅ NEW: Performance optimizations\n";
     }
     
@@ -199,6 +237,8 @@ int main() {
     std::cout << "C++11 - The Foundation:\n";
     std::cout << "  ✅ Basic lambdas with explicit types\n";
     std::cout << "  ✅ Simple captures\n";
+    std::cout << "  ✅ Single-return type deduction\n";
+    std::cout << "  ❌ No multiple-return type deduction\n";
     std::cout << "  ❌ No generic lambdas\n";
     std::cout << "  ❌ No init capture\n";
     std::cout << "  ❌ No constexpr\n";
@@ -207,16 +247,17 @@ int main() {
     std::cout << "C++14 - Generic Power:\n";
     std::cout << "  ✅ All C++11 features\n";
     std::cout << "  ✅ NEW: Generic lambdas (auto params)\n";
+    std::cout << "  ✅ NEW: Multiple-return type deduction\n";
     std::cout << "  ✅ NEW: Init captures\n";
-    std::cout << "  ✅ NEW: Auto return type deduction\n";
     std::cout << "  ❌ No constexpr\n";
+    std::cout << "  ❌ No structured bindings\n";
     std::cout << "  ❌ No templates\n\n";
 #endif
 #if __cplusplus >= 201703L
     std::cout << "C++17 - Compile-time:\n";
     std::cout << "  ✅ All C++14 features\n";
     std::cout << "  ✅ NEW: Constexpr lambdas\n";
-    std::cout << "  ✅ NEW: Structured bindings\n";
+    std::cout << "  ✅ NEW: Structured bindings with lambda returns\n";
     std::cout << "  ✅ NEW: Enhanced algorithms\n";
     std::cout << "  ❌ No template parameters\n";
     std::cout << "  ❌ No concepts\n\n";

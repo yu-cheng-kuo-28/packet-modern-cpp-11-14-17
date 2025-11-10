@@ -2,7 +2,7 @@
 
 - This repo and the article below were greatly helped by ChatGPT/Copilot.
 
-- The article: [C++ 02 | Lambda Evolution: From C++11 to C++17 (and Why You Should Abandon std::bind())](https://yc-kuo.medium.com/c-02-lambda-evolution-from-c-11-to-c-20-and-why-you-should-abandon-std-bind-2896cb80f7e5)
+- The corresponding article: [C++ 02 | Lambda Evolution: From C++11 to C++17 (and Why You Should Abandon std::bind())](https://yc-kuo.medium.com/c-02-lambda-evolution-from-c-11-to-c-20-and-why-you-should-abandon-std-bind-2896cb80f7e5)
 
 > Inspired by the online courses [Complete Modern C++ (C++11/14/17) Specialization](https://www.coursera.org/specializations/packt-complete-modern-c-c-11-14-17) by Packt on Coursera
 
